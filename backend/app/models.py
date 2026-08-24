@@ -32,6 +32,15 @@ class Leads(Base):
     __tablename__ = "leads"
 
     salesforce_lead_id = Column(String, primary_key=True)
+    first_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
+    stage = Column(String, nullable=True)
+    referral_reason = Column(String, nullable=True)
+    referring_organization = Column(String, nullable=True)
+    referring_contact = Column(String, nullable=True)
+    location = Column(String, nullable=True)
     referral_date = Column(Date, nullable=True)
     referral_source = Column(String, nullable=True)
+    level_of_interest = Column(String, nullable=True)
+    enrollment_status = Column(String, nullable=True)
     assignee = Column(String, nullable=True)

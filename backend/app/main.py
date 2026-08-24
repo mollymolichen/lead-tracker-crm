@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import Base, engine
-from app.routers import sync
+from app.routers import leads, sync
 
 app = FastAPI(title="Salesforce-Talkdesk Integration API")
 
@@ -16,6 +16,8 @@ app.add_middleware(
 )
 
 app.include_router(sync.router)
+app.include_router(leads.router)
+
 
 
 @app.on_event("startup")

@@ -52,8 +52,9 @@ Dashboard.jsx
     - Client can initiate phone calls
 - `backend/` — FastAPI app (Python)
     - Syncs task data into PostgreSQL
+    - Serves lead data from PostgreSQL (`GET /leads`)
     - Handles the Talkdesk OAuth 2.0 client-credentials flow
-- PostgreSQL — stores synced tasks
+- PostgreSQL — stores synced tasks and leads
     - Note: if you rename POSTGRES_DB again, either manually create the new database as above, or run `docker compose down -v` to wipe the volume and let Postgres reinitialize from scratch (only do this if you don't need the existing data).
 
 ### Getting Started
@@ -73,7 +74,11 @@ Dashboard.jsx
    pip install -r requirements.txt
    uvicorn app.main:app --reload
    ```
-3. Start the frontend:
+3. Seed the `leads` table (only needs to run once; safe to re-run, it upserts by lead ID):
+   ```
+   docker compose exec backend python -m app.seed
+   ```
+4. Start the frontend:
    ```
    cd frontend
    npm install

@@ -14,3 +14,22 @@ class TaskResponse(BaseModel):
     importance: str | None = None
 
     model_config = {"from_attributes": True}
+
+
+class LeadResponse(BaseModel):
+    salesforce_lead_id: str
+    first_name: str | None = None
+    last_name: str | None = None
+    stage: str | None = None
+    referral_reason: str | None = None
+    referring_organization: str | None = None
+    referring_contact: str | None = None
+    location: str | None = None
+    referral_date: date | None = None
+    referral_source: str | None = None
+    level_of_interest: str | None = None
+    enrollment_status: str | None = None
+    assignee: str | None = None
+
+    model_config = {"from_attributes": True}
+
