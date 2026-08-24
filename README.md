@@ -54,6 +54,7 @@ Dashboard.jsx
     - Syncs task data into PostgreSQL
     - Handles the Talkdesk OAuth 2.0 client-credentials flow
 - PostgreSQL — stores synced tasks
+    - Note: if you rename POSTGRES_DB again, either manually create the new database as above, or run `docker compose down -v` to wipe the volume and let Postgres reinitialize from scratch (only do this if you don't need the existing data).
 
 ### Getting Started
 1. Copy env files and fill in your Talkdesk credentials (kept as placeholder for testing):

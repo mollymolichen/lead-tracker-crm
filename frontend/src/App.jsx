@@ -1,8 +1,8 @@
-import Dashboard from './Dashboard'
+import Leads from './Leads'
 
 function App() {
   return (
-    <Dashboard />
+    <Leads />
   )
 }
 
