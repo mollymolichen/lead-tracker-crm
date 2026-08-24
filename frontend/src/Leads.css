@@ -125,3 +125,43 @@ a.lead-link:hover{text-decoration:underline;}
 .status-loading{color:var(--sf-gray); font-size:13px; margin:8px 0;}
 .status-error{color:var(--sf-red); font-size:13px; margin:8px 0;}
 
+/* Lead detail slide-over panel */
+.lead-panel-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,.2); z-index:20;
+}
+.lead-panel{
+  position:fixed; top:0; right:0; bottom:0; width:420px; max-width:90vw;
+  background:#fff; box-shadow:-2px 0 8px rgba(0,0,0,.15); z-index:21;
+  padding:20px; overflow-y:auto;
+}
+.lead-panel-header{
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;
+}
+.lead-panel-header h2{margin:0; font-size:17px; color:var(--sf-header);}
+.lead-panel-close{
+  background:none; border:none; font-size:22px; line-height:1; color:var(--sf-gray);
+  cursor:pointer; padding:0 4px;
+}
+.lead-panel-close:hover{color:var(--sf-text);}
+.talkdesk-call-btn{
+  width:100%; font-size:13px; font-weight:600; color:#fff; background:var(--sf-blue);
+  border:none; border-radius:4px; padding:10px 14px; cursor:pointer; margin-bottom:20px;
+}
+.talkdesk-call-btn:hover{background:#0b7ee0;}
+.lead-panel-section-title{
+  font-size:13px; margin:0 0 10px; color:var(--sf-header); font-weight:700;
+  border-top:1px solid var(--sf-border); padding-top:16px;
+}
+.call-history{display:flex; flex-direction:column; gap:12px;}
+.call-entry{
+  border:1px solid var(--sf-border); border-radius:6px; padding:10px 12px;
+}
+.call-entry-header{
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;
+}
+.call-date{font-size:12px; font-weight:600; color:var(--sf-text);}
+.call-success{font-size:11.5px; color:var(--sf-gray);}
+.call-outcome{font-size:11.5px; color:var(--sf-blue); margin-bottom:6px;}
+.call-comments{font-size:12px; color:var(--sf-text); margin:0; line-height:1.4;}
+
+

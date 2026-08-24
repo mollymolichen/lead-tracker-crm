@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Chart from 'chart.js/auto'
+import LeadPanel from './LeadPanel'
 import './Leads.css'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -21,6 +22,7 @@ function countBy(list) {
 // Map the backend LeadResponse shape onto the fields used by this view
 function toRow(lead) {
   return {
+    id: lead.salesforce_lead_id,
     first: lead.first_name,
     last: lead.last_name,
     stage: lead.stage,
@@ -49,6 +51,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedOwner, setSelectedOwner] = useState(DEFAULT_OWNER)
+  const [selectedLead, setSelectedLead] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -196,7 +199,11 @@ export default function Dashboard() {
                   <tbody>
                     {filteredRows.map((r, i) => (
                       <tr key={i}>
-                        <td><a className="lead-link" href="#">{r.first} {r.last}</a></td>
+                        <td>
+                          <a className="lead-link" href="#" onClick={(e) => { e.preventDefault(); setSelectedLead(r) }}>
+                            {r.first} {r.last}
+                          </a>
+                        </td>
                         <td><span className={`badge ${stageBadgeClass(r.stage)}`}>{r.stage}</span></td>
                         <td>{r.reason}</td>
                         <td>{r.org}</td>
@@ -219,6 +226,8 @@ export default function Dashboard() {
         <p className="disclaimer">Lead data is served from PostgreSQL via the FastAPI backend
         (seeded from Central_Dashboard_-_Opportunity_Export.xlsx); no real patient or referral information is shown.</p>
       </div>
+
+      <LeadPanel lead={selectedLead} apiUrl={API_URL} onClose={() => setSelectedLead(null)} />
     </>
   )
 }

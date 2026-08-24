@@ -44,3 +44,17 @@ class Leads(Base):
     level_of_interest = Column(String, nullable=True)
     enrollment_status = Column(String, nullable=True)
     assignee = Column(String, nullable=True)
+
+
+class Call(Base):
+    __tablename__ = "calls"
+
+    activity_id = Column(String, primary_key=True)
+    opportunity_id = Column(String, index=True, nullable=False)
+    subject = Column(String, nullable=True)
+    call_date = Column(Date, nullable=True)
+    call_success = Column(String, nullable=True)
+    call_outcome = Column(String, nullable=True)
+    comments = Column(String, nullable=True)
+    location = Column(String, nullable=True)
+

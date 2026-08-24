@@ -33,3 +33,16 @@ class LeadResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
+
+class CallResponse(BaseModel):
+    activity_id: str
+    opportunity_id: str
+    subject: str | None = None
+    call_date: date | None = None
+    call_success: str | None = None
+    call_outcome: str | None = None
+    comments: str | None = None
+    location: str | None = None
+
+    model_config = {"from_attributes": True}
+
