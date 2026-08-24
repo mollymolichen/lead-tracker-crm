@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Central Dashboard - Opportunity Export (Mock)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  :root{
+    --sf-blue:#1B96FF;
+    --sf-navy:#032D60;
+    --sf-header:#16325C;
+    --sf-bg:#F3F3F3;
+    --sf-border:#DDDBDA;
+    --sf-text:#3E3E3C;
+    --sf-green:#2E844A;
+    --sf-red:#BA0517;
+    --sf-orange:#B95000;
+    --sf-gray:#706E6B;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Salesforce Sans","Segoe UI",Arial,sans-serif;
+    background:var(--sf-bg);
+    color:var(--sf-text);
+    font-size:13px;
+  }
+  /* Top nav */
+  .topbar{
+    background:var(--sf-header);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    padding:0 16px;
+    height:44px;
+    gap:16px;
+  }
+  .topbar .brand{font-weight:700; font-size:14px; display:flex; align-items:center; gap:8px;}
+  .topbar .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--sf-blue);}
+  .topbar .tabs{display:flex; gap:20px; font-size:12.5px; opacity:.9;}
+  .topbar .tabs span{padding:12px 0; border-bottom:3px solid transparent; cursor:default;}
+  .topbar .tabs span.active{border-bottom-color:var(--sf-blue); font-weight:600;}
+  .topbar .right{margin-left:auto; display:flex; align-items:center; gap:14px; font-size:12px;}
+  .avatar{width:26px;height:26px;border-radius:50%;background:#8C8DA8;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+
+  .path{
+    background:#fff;
+    border-bottom:1px solid var(--sf-border);
+    padding:10px 20px;
+    font-size:12px;
+    color:var(--sf-gray);
+  }
+  .path b{color:var(--sf-text);}
+
+  .container{padding:16px 20px 40px;}
+
+  h1.page-title{font-size:20px; margin:0 0 4px; color:var(--sf-header);}
+  .subtitle{color:var(--sf-gray); margin:0 0 16px; font-size:12.5px;}
+
+  /* KPI tiles */
+  .kpi-row{display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:18px;}
+  .kpi-card{
+    background:#fff; border:1px solid var(--sf-border); border-radius:6px;
+    padding:14px 16px; box-shadow:0 1px 2px rgba(0,0,0,.06);
+  }
+  .kpi-card .label{font-size:11.5px; color:var(--sf-gray); text-transform:uppercase; letter-spacing:.3px;}
+  .kpi-card .value{font-size:26px; font-weight:700; color:var(--sf-header); margin-top:4px;}
+  .kpi-card .delta{font-size:11.5px; margin-top:4px;}
+  .delta.up{color:var(--sf-green);}
+  .delta.down{color:var(--sf-red);}
+  .delta.flat{color:var(--sf-gray);}
+
+  /* Charts grid */
+  .chart-row{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:12px; margin-bottom:18px;}
+  .card{
+    background:#fff; border:1px solid var(--sf-border); border-radius:6px;
+    padding:12px 14px; box-shadow:0 1px 2px rgba(0,0,0,.06);
+  }
+  .card h3{font-size:13px; margin:0 0 8px; color:var(--sf-header); font-weight:700;}
+  .card canvas{max-height:220px;}
+
+  /* List view table */
+  .listview{
+    background:#fff; border:1px solid var(--sf-border); border-radius:6px;
+    overflow:hidden; box-shadow:0 1px 2px rgba(0,0,0,.06);
+  }
+  .listview-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 14px; border-bottom:1px solid var(--sf-border);
+  }
+  .listview-header h3{margin:0; font-size:14px; color:var(--sf-header);}
+  .listview-header .count{font-size:12px; color:var(--sf-gray);}
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  thead th{
+    text-align:left; background:#F8F8F8; color:var(--sf-gray);
+    padding:8px 10px; border-bottom:1px solid var(--sf-border); font-weight:600;
+    white-space:nowrap;
+  }
+  tbody td{padding:8px 10px; border-bottom:1px solid #F0F0F0; white-space:nowrap;}
+  tbody tr:hover{background:#F5F9FF;}
+  a.lead-link{color:var(--sf-blue); text-decoration:none; font-weight:600;}
+  a.lead-link:hover{text-decoration:underline;}
+
+  .badge{
+    display:inline-block; padding:2px 10px; border-radius:12px; font-size:11px; font-weight:600;
+  }
+  .badge.stage-Closed-Won{background:#DDF6E8; color:var(--sf-green);}
+  .badge.stage-Closed-Lost{background:#FBE2E2; color:var(--sf-red);}
+  .badge.stage-Initial-Engagement{background:#E8F0FE; color:#1B5FC4;}
+  .badge.stage-Center-Tour{background:#FFF0DE; color:var(--sf-orange);}
+  .badge.stage-State-Review{background:#F1E8FE; color:#7B3FE4;}
+  .badge.stage-Home-Visit-Clinical-ERN{background:#E4F7F6; color:#0B8880;}
+  .badge.stage-Home-Visit-Non-Clinical{background:#E4F7F6; color:#0B8880;}
+  .badge.stage-Follow-up-Assessments{background:#FDF2D0; color:#8A6D00;}
+
+  .pill-hot{color:var(--sf-red); font-weight:700;}
+  .pill-warm{color:var(--sf-orange); font-weight:700;}
+  .pill-cold{color:#1B5FC4; font-weight:700;}
+  .pill-closed{color:var(--sf-gray); font-weight:700;}
+
+  .footer-note{
+    padding:10px 14px; font-size:11px; color:var(--sf-gray); border-top:1px solid var(--sf-border);
+  }
+  .disclaimer{
+    margin:18px 0 0; font-size:11px; color:var(--sf-gray); font-style:italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="dot"></span>Habitat Health</div>
+  <div class="tabs">
+    <span>Home</span>
+    <span class="active">Opportunities</span>
+    <span>Accounts</span>
+    <span>Reports</span>
+    <span>Dashboards</span>
+  </div>
+  <div class="right">
+    <span>&#128269;</span>
+    <span>&#9881;&#65039;</span>
+    <div class="avatar">ES</div>
+  </div>
+</div>
+
+<div class="path">Opportunities &nbsp;›&nbsp; <b>Central Dashboard – Opportunity Export</b></div>
+
+<div class="container">
+  <h1 class="page-title">Central Dashboard – Opportunity Export</h1>
+  <p class="subtitle">Mock Salesforce/Talkdesk view · Referral-to-enrollment pipeline across all Habitat Health locations</p>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="chart-row">
+    <div class="card">
+      <h3>Pipeline by Stage</h3>
+      <canvas id="stageChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>By Location</h3>
+      <canvas id="locationChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>By Referral Reason</h3>
+      <canvas id="reasonChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>Level of Interest</h3>
+      <canvas id="interestChart"></canvas>
+    </div>
+  </div>
+
+  <div class="listview">
+    <div class="listview-header">
+      <h3>All Opportunities</h3>
+      <span class="count" id="rowCount"></span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Lead Name</th>
+            <th>Stage</th>
+            <th>Referral Reason</th>
+            <th>Referring Organization</th>
+            <th>Referring Contact</th>
+            <th>Location</th>
+            <th>Referral Date</th>
+            <th>Level of Interest</th>
+            <th>Current Enrollment Status</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="footer-note" id="footerNote"></div>
+  </div>
+
+  <p class="disclaimer">Mock data generated for prototype purposes only. Field names mirror the columns in
+  Central_Dashboard_-_Opportunity_Export.xlsx; no real patient or referral information is shown.</p>
+</div>
+
+<script>
+/* ---------- Seeded RNG so the mock data is stable across reloads ---------- */
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rand = mulberry32(42);
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(rand() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function pool(entries){
+  // entries: [[value, count], ...] -> flattened, shuffled array
+  let out = [];
+  entries.forEach(([v, n]) => { for(let i=0;i<n;i++) out.push(v); });
+  return shuffle(out);
+}
+
+/* ---------- Distributions modeled on the real export's column value counts ---------- */
+const TOTAL = 42;
+
+const stages = pool([
+  ["Closed Lost", 18], ["Initial Engagement", 12], ["Closed Won", 3],
+  ["Center Tour", 3], ["State Review", 2], ["Home Visit - Clinical (ERN)", 2],
+  ["Follow-up Assessments", 1], ["Home Visit - Non Clinical", 1]
+]);
+const locations = pool([["Sacramento, CA", 25], ["South LA, CA", 17]]);
+const reasons = pool([
+  ["Nursing home diversion", 15], ["Complex care", 11],
+  ["Caregiver support", 9], ["PACE eligibility", 7]
+]);
+const interests = pool([["Closed", 21], ["Hot", 15], ["Cold", 5], ["Warm", 1]]);
+const enrollmentStatuses = pool([
+  ["Engaged in enrollment process", 13], ["Attempting to contact", 9],
+  ["Not likely eligible at this time", 5], ["Not interested in proceeding", 4],
+  ["Withdrew before assessment", 3], ["Withdrew after assessment", 3],
+  ["Currently enrolled", 3], ["Withdrew after state approval", 2]
+]);
+
+const firstNames = ["Maria","James","Linda","Robert","Patricia","David","Susan","Michael","Barbara","William",
+  "Elizabeth","Richard","Jennifer","Charles","Nancy","Joseph","Karen","Thomas","Betty","Daniel"];
+const lastNames = ["Garcia","Nguyen","Smith","Johnson","Williams","Brown","Jones","Davis","Rodriguez","Martinez",
+  "Lee","Walker","Hall","Allen","Young","King","Wright","Scott","Torres","Nguyen"];
+const orgs = ["Sunrise Medical Group","Bayview Family Clinic","Golden State Cardiology","Valley Community Health",
+  "St. Anne's Hospital","Metro Senior Care Partners","Pacific Rehab Center","Horizon Home Health",
+  "Capitol Internal Medicine","Riverside Senior Services"];
+const contacts = ["Dr. A. Chen","N. Patel, RN","Dr. M. Alvarez","S. Thompson, LCSW","Dr. R. Okafor",
+  "K. Ramirez, SW","Dr. L. Kim","J. Foster, NP","Dr. B. Osei","T. Nakamura, RN"];
+
+function pad(n){ return n < 10 ? "0"+n : ""+n; }
+function randomDateWithinDays(days){
+  const now = new Date("2026-08-24");
+  const offset = Math.floor(rand() * days);
+  const d = new Date(now.getTime() - offset*24*60*60*1000);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+
+const rows = [];
+for(let i = 0; i < TOTAL; i++){
+  rows.push({
+    first: firstNames[i % firstNames.length],
+    last: lastNames[(i + 3) % lastNames.length],
+    stage: stages[i],
+    reason: reasons[i],
+    org: orgs[i % orgs.length],
+    contact: contacts[i % contacts.length],
+    location: locations[i],
+    referralDate: randomDateWithinDays(120),
+    interest: interests[i],
+    enrollmentStatus: enrollmentStatuses[i]
+  });
+}
+
+/* ---------- KPIs ---------- */
+const closedWon = rows.filter(r => r.stage === "Closed Won").length;
+const closedLost = rows.filter(r => r.stage === "Closed Lost").length;
+const active = TOTAL - closedWon - closedLost;
+const conversionRate = ((closedWon / TOTAL) * 100).toFixed(1);
+
+const kpis = [
+  { label: "Total Referrals", value: TOTAL, delta: "+6 this month", cls: "up" },
+  { label: "Active Pipeline", value: active, delta: `${active} in progress`, cls: "flat" },
+  { label: "Enrolled (Closed Won)", value: closedWon, delta: "+1 this month", cls: "up" },
+  { label: "Closed Lost", value: closedLost, delta: `${((closedLost/TOTAL)*100).toFixed(0)}% of total`, cls: "down" },
+  { label: "Conversion Rate", value: conversionRate + "%", delta: "Referral → Enrolled", cls: "flat" },
+];
+document.getElementById("kpiRow").innerHTML = kpis.map(k => `
+  <div class="kpi-card">
+    <div class="label">${k.label}</div>
+    <div class="value">${k.value}</div>
+    <div class="delta ${k.cls}">${k.delta}</div>
+  </div>
+`).join("");
+
+/* ---------- Table ---------- */
+function stageBadgeClass(stage){ return "stage-" + stage.replace(/[^a-zA-Z]+/g, "-").replace(/^-|-$/g,""); }
+function interestClass(v){
+  return { Hot:"pill-hot", Warm:"pill-warm", Cold:"pill-cold", Closed:"pill-closed" }[v] || "";
+}
+document.getElementById("tableBody").innerHTML = rows.map(r => `
+  <tr>
+    <td><a class="lead-link" href="#">${r.first} ${r.last}</a></td>
+    <td><span class="badge ${stageBadgeClass(r.stage)}">${r.stage}</span></td>
+    <td>${r.reason}</td>
+    <td>${r.org}</td>
+    <td>${r.contact}</td>
+    <td>${r.location}</td>
+    <td>${r.referralDate}</td>
+    <td><span class="${interestClass(r.interest)}">${r.interest}</span></td>
+    <td>${r.enrollmentStatus}</td>
+  </tr>
+`).join("");
+document.getElementById("rowCount").textContent = `${TOTAL} items`;
+document.getElementById("footerNote").textContent = `1–${TOTAL} of ${TOTAL} · Sorted by Referral Date`;
+
+/* ---------- Charts ---------- */
+function countBy(list){
+  const m = {};
+  list.forEach(v => m[v] = (m[v]||0) + 1);
+  return m;
+}
+const palette = ["#1B96FF","#2E844A","#B95000","#BA0517","#7B3FE4","#0B8880","#8A6D00","#5867E8"];
+
+function barChart(ctx, labels, data, horizontal){
+  new Chart(ctx, {
+    type: "bar",
+    data: { labels, datasets: [{ data, backgroundColor: palette }] },
+    options: {
+      indexAxis: horizontal ? "y" : "x",
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { display: false } }, y: { grid: { display: false } } }
+    }
+  });
+}
+function donutChart(ctx, labels, data){
+  new Chart(ctx, {
+    type: "doughnut",
+    data: { labels, datasets: [{ data, backgroundColor: palette }] },
+    options: { plugins: { legend: { position: "bottom", labels: { boxWidth: 10, font: { size: 10 } } } } }
+  });
+}
+
+const stageCounts = countBy(rows.map(r => r.stage));
+barChart(document.getElementById("stageChart"), Object.keys(stageCounts), Object.values(stageCounts), true);
+
+const locationCounts = countBy(rows.map(r => r.location));
+donutChart(document.getElementById("locationChart"), Object.keys(locationCounts), Object.values(locationCounts));
+
+const reasonCounts = countBy(rows.map(r => r.reason));
+barChart(document.getElementById("reasonChart"), Object.keys(reasonCounts), Object.values(reasonCounts), false);
+
+const interestCounts = countBy(rows.map(r => r.interest));
+donutChart(document.getElementById("interestChart"), Object.keys(interestCounts), Object.values(interestCounts));
+</script>
+
+</body>
+</html>
