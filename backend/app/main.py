@@ -3,9 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import Base, engine
-from app.routers import leads, sync
+from app.routers import leads, webhooks
 
-app = FastAPI(title="Salesforce-Talkdesk Integration API")
+app = FastAPI(title="Talkdesk Integration API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -15,15 +15,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(sync.router)
 app.include_router(leads.router)
-
-
+app.include_router(webhooks.router)
 
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
-
 
 @app.get("/health")
 def health_check():

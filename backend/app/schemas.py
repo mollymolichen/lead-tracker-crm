@@ -3,18 +3,8 @@ from datetime import date
 from pydantic import BaseModel
 
 '''
-Pydantic schemas defining the data validation and serialization for API requests and responses.
+Pydantic schema models defining the contract for API requests and responses.
 '''
-
-class TaskResponse(BaseModel):
-    task_id: str
-    title: str | None = None
-    status: str | None = None
-    due_date: date | None = None
-    importance: str | None = None
-
-    model_config = {"from_attributes": True}
-
 class LeadResponse(BaseModel):
     salesforce_lead_id: str
     first_name: str | None = None
@@ -33,6 +23,13 @@ class LeadResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class LeadStatusUpdate(BaseModel):
+    """Payload sent by Talkdesk (e.g. a Studio flow) when a lead's status changes."""
+    opportunity_id: str
+    stage: str
+    enrollment_status: str | None = None
+
+
 '''
 Below are the Pydantic schemas for Talkdesk-related interactions, including request and response models.
 '''
@@ -47,20 +44,3 @@ class CallResponse(BaseModel):
     location: str | None = None
 
     model_config = {"from_attributes": True}
-
-
-class CallCreate(BaseModel):
-    call_date: date
-    call_outcome: str
-    comments: str | None = None
-
-
-
-class CallbackRequest(BaseModel):
-    contact_phone_number: str
-
-
-class CallbackResult(BaseModel):
-    status: str
-    message: str
-

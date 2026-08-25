@@ -6,19 +6,6 @@ from app.database import Base
 SQLAlchemy model defining the database table structure (ORM).
 '''
 
-'''
-Task model representing a task in the system.
-'''
-class Task(Base):
-    __tablename__ = "tasks"
-
-    task_id = Column(String, primary_key=True)
-    title = Column(String, nullable=True)
-    status = Column(String, nullable=True)
-    due_date = Column(Date, nullable=True)
-    importance = Column(String, nullable=True)
-    assignee = Column(String, nullable=True)
-
 class Staff(Base):
     __tablename__ = "staff"
 
@@ -57,4 +44,3 @@ class Call(Base):
     call_outcome = Column(String, nullable=True)
     comments = Column(String, nullable=True)
     location = Column(String, nullable=True)
-
