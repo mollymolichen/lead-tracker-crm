@@ -22,7 +22,10 @@ def get_talkdesk_token() -> str:
     }
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
 
-    response = requests.post(settings.talkdesk_token_url, data=payload, headers=headers, timeout=10)
+    try:
+        response = requests.post(settings.talkdesk_token_url, data=payload, headers=headers, timeout=10)
+    except requests.exceptions.RequestException as exc:
+        raise TalkdeskAuthError(f"Could not reach Talkdesk: {exc}") from exc
     if response.status_code != 200:
         raise TalkdeskAuthError("Failed to fetch OAuth token from Talkdesk")
 
@@ -33,19 +36,23 @@ def get_talkdesk_token() -> str:
 
 
 '''
-Fetch task/case entries from Talkdesk using a freshly issued OAuth token.
+Request a Talkdesk callback that connects an agent to a contact's phone number.
     See: https://docs.talkdesk.com/reference/calls-callback-post
 '''
-def request_talkdesk_callback() -> list[dict]:
+def request_talkdesk_callback(contact_phone_number: str) -> dict:
     token = get_talkdesk_token()
     payload = {
-        "talkdesk_phone_number": "<YOUR_TALKDESK_PHONE_NUMBER>",
-        "contact_phone_number": "<CONTACT_PHONE_NUMBER>"
+        "talkdesk_phone_number": settings.talkdesk_phone_number,
+        "contact_phone_number": contact_phone_number,
     }
     headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
 
-    response = requests.post(f"{settings.talkdesk_api_base_url}/calls/callback", data=payload, headers=headers, timeout=10)
-    if response.status_code != 200:
-        raise TalkdeskAPIError(f"Talkdesk API call failed with status {response.status_code}")
+    try:
+        response = requests.post(f"{settings.talkdesk_api_base_url}/calls/callback", data=payload, headers=headers, timeout=10)
+    except requests.exceptions.RequestException as exc:
+        raise TalkdeskAPIError(f"Could not reach Talkdesk: {exc}") from exc
+    if response.status_code not in (200, 201, 202):
+        raise TalkdeskAPIError(f"Talkdesk callback request failed with status {response.status_code}")
 
-    return response.json().get("entries", [])
+    return response.json()
+

@@ -124,6 +124,7 @@ a.lead-link:hover{text-decoration:underline;}
 }
 .status-loading{color:var(--sf-gray); font-size:13px; margin:8px 0;}
 .status-error{color:var(--sf-red); font-size:13px; margin:8px 0;}
+.status-success{color:var(--sf-green); font-size:13px; margin:8px 0;}
 
 /* Lead detail slide-over panel */
 .lead-panel-overlay{
@@ -138,11 +139,19 @@ a.lead-link:hover{text-decoration:underline;}
   display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;
 }
 .lead-panel-header h2{margin:0; font-size:17px; color:var(--sf-header);}
+.lead-details{margin:0 0 16px; padding:10px 0; border-top:1px solid var(--sf-border); border-bottom:1px solid var(--sf-border);}
+.lead-details div{display:grid; grid-template-columns:145px 1fr; gap:8px; padding:4px 0;}
+.lead-details dt{font-size:11.5px; color:var(--sf-gray);}
+.lead-details dd{margin:0; font-size:12px; color:var(--sf-text); font-weight:600;}
 .lead-panel-close{
   background:none; border:none; font-size:22px; line-height:1; color:var(--sf-gray);
   cursor:pointer; padding:0 4px;
 }
 .lead-panel-close:hover{color:var(--sf-text);}
+.talkdesk-phone-input{
+  width:100%; font-size:13px; padding:8px 10px; margin-bottom:8px;
+  border:1px solid var(--sf-border); border-radius:4px; box-sizing:border-box;
+}
 .talkdesk-call-btn{
   width:100%; font-size:13px; font-weight:600; color:#fff; background:var(--sf-blue);
   border:none; border-radius:4px; padding:10px 14px; cursor:pointer; margin-bottom:20px;
@@ -152,6 +161,20 @@ a.lead-link:hover{text-decoration:underline;}
   font-size:13px; margin:0 0 10px; color:var(--sf-header); font-weight:700;
   border-top:1px solid var(--sf-border); padding-top:16px;
 }
+.call-note-form{display:flex; flex-direction:column; gap:10px; margin-bottom:8px;}
+.call-note-field{display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--sf-gray);}
+.call-note-field input,
+.call-note-field select,
+.call-note-field textarea{
+  font-size:13px; padding:7px 9px; border:1px solid var(--sf-border); border-radius:4px;
+  font-family:inherit; color:var(--sf-text); resize:vertical;
+}
+.call-note-save-btn{
+  align-self:flex-start; font-size:12px; font-weight:600; color:var(--sf-header);
+  background:#fff; border:1px solid var(--sf-border); border-radius:4px; padding:7px 14px; cursor:pointer;
+}
+.call-note-save-btn:hover{background:#F5F9FF;}
+.call-note-save-btn:disabled{opacity:.6; cursor:default;}
 .call-history{display:flex; flex-direction:column; gap:12px;}
 .call-entry{
   border:1px solid var(--sf-border); border-radius:6px; padding:10px 12px;

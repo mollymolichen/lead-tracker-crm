@@ -15,7 +15,6 @@ class TaskResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
 class LeadResponse(BaseModel):
     salesforce_lead_id: str
     first_name: str | None = None
@@ -34,6 +33,9 @@ class LeadResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+'''
+Below are the Pydantic schemas for Talkdesk-related interactions, including request and response models.
+'''
 class CallResponse(BaseModel):
     activity_id: str
     opportunity_id: str
@@ -45,4 +47,20 @@ class CallResponse(BaseModel):
     location: str | None = None
 
     model_config = {"from_attributes": True}
+
+
+class CallCreate(BaseModel):
+    call_date: date
+    call_outcome: str
+    comments: str | None = None
+
+
+
+class CallbackRequest(BaseModel):
+    contact_phone_number: str
+
+
+class CallbackResult(BaseModel):
+    status: str
+    message: str
 

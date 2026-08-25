@@ -6,6 +6,22 @@ import './Leads.css'
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const palette = ["#1B96FF", "#2E844A", "#B95000", "#BA0517", "#7B3FE4", "#0B8880", "#8A6D00", "#5867E8"]
 const DEFAULT_OWNER = "Angelina Moua"
+const STAGE_ORDER = [
+  "Initial Engagement",
+  "Home Visit - Non Clinical",
+  "Center Tour",
+  "Home Visit - Clinical (ERN)",
+  "Follow-up Assessments",
+  "State Review",
+  "Closed Won",
+  "Closed Lost",
+]
+const IN_PROGRESS_STAGES = STAGE_ORDER.slice(0, 6)
+const VIEW_STAGES = {
+  "in-progress": IN_PROGRESS_STAGES,
+  won: ["Closed Won"],
+  lost: ["Closed Lost"],
+}
 
 function stageBadgeClass(stage) {
   return "stage-" + stage.replace(/[^a-zA-Z]+/g, "-").replace(/^-|-$/g, "")
@@ -51,6 +67,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedOwner, setSelectedOwner] = useState(DEFAULT_OWNER)
+  const [selectedView, setSelectedView] = useState("in-progress")
   const [selectedLead, setSelectedLead] = useState(null)
 
   useEffect(() => {
@@ -74,11 +91,20 @@ export default function Dashboard() {
     return () => { cancelled = true }
   }, [])
 
+  // Memoization to avoid recalculating every time the page loads or a filter changes, set to avoid duplicates
   const owners = useMemo(() => Array.from(new Set(rows.map((r) => r.accountOwner))).sort(), [rows])
 
-  const filteredRows = useMemo(
-    () => (selectedOwner === "All" ? rows : rows.filter((r) => r.accountOwner === selectedOwner)),
+  // Summary tiles only depend on Account Owner, not the selected view
+  const ownerFilteredRows = useMemo(
+    () => rows.filter((r) => selectedOwner === "All" || r.accountOwner === selectedOwner),
     [rows, selectedOwner]
+  )
+
+  const filteredRows = useMemo(
+    () => ownerFilteredRows.filter((r) =>
+      !VIEW_STAGES[selectedView] || VIEW_STAGES[selectedView].includes(r.stage)
+    ),
+    [ownerFilteredRows, selectedView]
   )
   const total = filteredRows.length
 
@@ -86,16 +112,17 @@ export default function Dashboard() {
   const reasonChartRef = useRef(null)
   const interestChartRef = useRef(null)
 
-  const closedWon = filteredRows.filter((r) => r.stage === "Closed Won").length
-  const closedLost = filteredRows.filter((r) => r.stage === "Closed Lost").length
-  const active = total - closedWon - closedLost
-  const conversionRate = total ? ((closedWon / total) * 100).toFixed(1) : "0.0"
+  const ownerTotal = ownerFilteredRows.length
+  const closedWon = ownerFilteredRows.filter((r) => r.stage === "Closed Won").length
+  const closedLost = ownerFilteredRows.filter((r) => r.stage === "Closed Lost").length
+  const active = ownerTotal - closedWon - closedLost
+  const conversionRate = ownerTotal ? ((closedWon / ownerTotal) * 100).toFixed(1) : "0.0"
 
   const kpis = [
-    { label: "Total Referrals", value: total, delta: "+6 this month", cls: "up" },
+    { label: "Total Referrals", value: ownerTotal, delta: "+6 this month", cls: "up" },
     { label: "Active Leads", value: active, delta: `${active} in progress`, cls: "flat" },
     { label: "Enrolled (Closed Won)", value: closedWon, delta: "+1 this month", cls: "up" },
-    { label: "Lost", value: closedLost, delta: `${total ? ((closedLost / total) * 100).toFixed(0) : 0}% of total`, cls: "down" },
+    { label: "Lost", value: closedLost, delta: `${ownerTotal ? ((closedLost / ownerTotal) * 100).toFixed(0) : 0}% of total`, cls: "down" },
     { label: "Conversion Rate", value: conversionRate + "%", delta: "Referral → Enrolled", cls: "flat" },
   ]
 
@@ -107,17 +134,17 @@ export default function Dashboard() {
     type: "bar",
     data: { labels: Object.keys(stageCounts), datasets: [{ data: Object.values(stageCounts), backgroundColor: palette }] },
     options: { indexAxis: "y", plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { display: false } } } },
-  }, [rows, selectedOwner])
+  }, [rows, selectedOwner, selectedView])
   useChart(reasonChartRef, {
     type: "bar",
     data: { labels: Object.keys(reasonCounts), datasets: [{ data: Object.values(reasonCounts), backgroundColor: palette }] },
     options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { display: false } } } },
-  }, [rows, selectedOwner])
+  }, [rows, selectedOwner, selectedView])
   useChart(interestChartRef, {
     type: "doughnut",
     data: { labels: Object.keys(interestCounts), datasets: [{ data: Object.values(interestCounts), backgroundColor: palette }] },
     options: { plugins: { legend: { position: "bottom", labels: { boxWidth: 10, font: { size: 10 } } } } },
-  }, [rows, selectedOwner])
+  }, [rows, selectedOwner, selectedView])
 
   return (
     <>
@@ -168,6 +195,15 @@ export default function Dashboard() {
               <div className="listview-header">
                 <h3>My Leads</h3>
                 <div className="header-actions">
+                  <label className="owner-filter">
+                    View:
+                    <select value={selectedView} onChange={(e) => setSelectedView(e.target.value)}>
+                      <option value="all">All Leads</option>
+                      <option value="in-progress">In Progress Leads</option>
+                      <option value="won">Won Leads</option>
+                      <option value="lost">Lost Leads</option>
+                    </select>
+                  </label>
                   <label className="owner-filter">
                     Account Owner:
                     <select value={selectedOwner} onChange={(e) => setSelectedOwner(e.target.value)}>

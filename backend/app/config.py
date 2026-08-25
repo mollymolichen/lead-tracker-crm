@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     talkdesk_client_id: str = ""
     talkdesk_client_secret: str = ""
     talkdesk_scope: str = "cases:read"
+    talkdesk_phone_number: str = ""
     database_url: str = "postgresql://user:password@localhost:5432/talkdesk_sync"
     cors_origins: str = "http://localhost:3000,http://localhost:5173"
 
