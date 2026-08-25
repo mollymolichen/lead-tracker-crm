@@ -16,9 +16,8 @@ export function TaskAction({ lead, apiUrl, onStageChange }) {
     const [scheduling, setScheduling] = useState(false)
     const [schedulingError, setSchedulingError] = useState(null)
 
-    // Fetch call history (for "last outreach date") when this is an Initial Engagement lead
+    // Get last outreach date from Talkdesk
     useEffect(() => {
-        if (lead.stage !== "Initial Engagement" || outreach) return
         setOutreach({ loading: true })
         fetch(`${apiUrl}/leads/${lead.id}/calls`)
             .then((res) => {
@@ -30,23 +29,28 @@ export function TaskAction({ lead, apiUrl, onStageChange }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [lead.id, lead.stage])
 
-    // Schedule the Clinical Home Visit and advance the lead's stage from the task itself
-    function scheduleClinicalVisit() {
-        if (!scheduledDate) return
+    // Post a stage change to the Talkdesk webhook, then sync it back into the parent's rows
+    function postStageChange(newStage) {
         setScheduling(true)
         setSchedulingError(null)
         fetch(`${apiUrl}/webhooks/talkdesk/lead-status`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ opportunity_id: lead.id, stage: "Home Visit - Clinical (ERN)" }),
+            body: JSON.stringify({ opportunity_id: lead.id, stage: newStage }),
         })
             .then(async (res) => {
                 const data = await res.json()
                 if (!res.ok) throw new Error(data.detail || "Failed to update lead stage")
-                onStageChange(lead, "Home Visit - Clinical (ERN)")
+                onStageChange(lead, newStage)
             })
             .catch((err) => setSchedulingError(err.message))
             .finally(() => setScheduling(false))
+    }
+
+    // Schedule the Clinical Home Visit and advance the lead's stage from the task itself
+    function scheduleClinicalVisit() {
+        if (!scheduledDate) return
+        postStageChange("Home Visit - Clinical (ERN)")
     }
 
     const lastOutreach = (
@@ -72,6 +76,7 @@ export function TaskAction({ lead, apiUrl, onStageChange }) {
     if (lead.stage === "Home Visit - Non Clinical" || lead.stage === "Center Tour") {
         return (
             <>
+                {lastOutreach}
                 <input
                     type="date"
                     className="task-date-input"
@@ -93,15 +98,46 @@ export function TaskAction({ lead, apiUrl, onStageChange }) {
 
     if (lead.stage === "Home Visit - Clinical (ERN)") {
         return (
-            <a className="task-btn task-link" href="https://www.dhcs.ca.gov/" target="_blank" rel="noreferrer">
-                Submit State Paperwork
-            </a>
+            <>
+                {lastOutreach}
+                <a className="task-btn task-link" href="https://www.dhcs.ca.gov/" target="_blank" rel="noreferrer">
+                    Submit State Paperwork
+                </a>
+            </>
+        )
+    }
+
+    if (lead.stage === "State Review") {
+        return (
+            <>
+                {lastOutreach}
+                <button
+                    type="button"
+                    className="task-btn"
+                    disabled={scheduling}
+                    onClick={() => postStageChange("Closed Won")}
+                >
+                    {scheduling ? "Updating…" : "Mark Won"}
+                </button>
+                <button
+                    type="button"
+                    className="task-btn task-btn-danger"
+                    disabled={scheduling}
+                    onClick={() => postStageChange("Closed Lost")}
+                >
+                    {scheduling ? "Updating…" : "Mark Lost"}
+                </button>
+                {schedulingError && <span className="status-error">{schedulingError}</span>}
+            </>
         )
     }
 
     const next = nextStageLabel(lead.stage)
     return (
-        <span className="task-detail">{next ? `Next step: move to ${next}` : "Awaiting next update"}</span>
+        <>
+            {lastOutreach}
+            <span className="task-detail">{next ? `Next step: move to ${next}` : "Awaiting next update"}</span>
+        </>
     )
 }
 

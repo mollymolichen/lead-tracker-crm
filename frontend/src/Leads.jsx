@@ -179,13 +179,10 @@ export default function Dashboard() {
           <span><a style={{ color: "inherit", textDecoration: "none" }} href="/#dashboard">Dashboard</a></span>
         </div>
         <div className="right">
-          <span>&#128269;</span>
-          <span>&#9881;&#65039;</span>
-          <div className="avatar">ES</div>
         </div>
       </div>
 
-      <div className="path">My Leads &nbsp;&rsaquo;&nbsp; <b>All Leads</b></div>
+      <div className="path">All Leads &nbsp;&rsaquo;&nbsp; <b>My Leads</b></div>
 
       <div className="container">
         <h1 className="page-title">My Leads</h1>
