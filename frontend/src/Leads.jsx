@@ -7,7 +7,7 @@ import './Leads.css'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const palette = ["#1B96FF", "#2E844A", "#B95000", "#BA0517", "#7B3FE4", "#0B8880", "#8A6D00", "#5867E8"]
-const DEFAULT_OWNER = "Angelina Moua"
+const DEFAULT_OWNER = "Sofia Marchetti"
 export const STAGE_ORDER = [
   "Initial Engagement",
   "Home Visit - Non Clinical",
@@ -176,7 +176,7 @@ export default function Dashboard() {
         <div className="brand"><span className="dot"></span>Habitat Health</div>
         <div className="tabs">
           <span className="active">My Leads</span>
-          <span><a href="/#dashboard">Dashboard</a></span>
+          <span><a style={{ color: "inherit", textDecoration: "none" }} href="/#dashboard">Dashboard</a></span>
         </div>
         <div className="right">
           <span>&#128269;</span>
