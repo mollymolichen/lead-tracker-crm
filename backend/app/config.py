@@ -1,5 +1,10 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+'''
+NOTE: This class is not used in the implementation. 
+It is a placeholder if we want to enable additional Talkdesk functionality and have an API key.
+Talkdesk client module for handling authentication and API requests.
+'''
 
 class Settings(BaseSettings):
     """App configuration loaded from environment variables / .env file."""

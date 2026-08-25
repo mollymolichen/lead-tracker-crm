@@ -7,12 +7,12 @@ from app.schemas import LeadResponse, LeadStatusUpdate
 
 router = APIRouter()
 
-# Called by Talkdesk (e.g. a Studio flow's HTTP request action) when a lead's status changes
+# Webhook listener to receive updates from Talkdesk when a lead's status changes
 @router.post(
     "/webhooks/talkdesk/lead-status",
     response_model=LeadResponse
 )
-def talkdesk_lead_status_webhook(body: LeadStatusUpdate, db: Session = Depends(get_db)):
+def handle_talkdesk_lead_status(body: LeadStatusUpdate, db: Session = Depends(get_db)):
     lead = db.get(Leads, body.opportunity_id)
     if lead is None:
         raise HTTPException(status_code=404, detail="Lead not found")

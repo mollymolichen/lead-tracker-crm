@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { STAGE_ORDER } from './Leads'
+import { TaskAction } from './Tasks'
 
 function sortByDateDesc(list) {
   return [...list].sort((a, b) => (a.call_date < b.call_date ? 1 : a.call_date > b.call_date ? -1 : 0))
 }
 
-export default function LeadPanel({ lead, apiUrl, onClose, onUpdateStage, updatingStageId, stageUpdateError }) {
+export default function LeadPanel({ lead, apiUrl, onClose, onUpdateStage, onTaskStageChange, updatingStageId, stageUpdateError }) {
   const [calls, setCalls] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -65,6 +66,11 @@ export default function LeadPanel({ lead, apiUrl, onClose, onUpdateStage, updati
           {lead.coldClosedReason && <div><dt>Reason for Cold/Close</dt><dd>{lead.coldClosedReason}</dd></div>}
           <div><dt>Current Enrollment Status</dt><dd>{lead.enrollmentStatus}</dd></div>
         </dl>
+
+        <h3 className="lead-panel-section-title">Next Steps</h3>
+        <div className="task-action">
+          <TaskAction lead={lead} apiUrl={apiUrl} onStageChange={onTaskStageChange} />
+        </div>
 
         <h3 className="lead-panel-section-title">Call History</h3>
         <p className="call-history-source">Synced from Talkdesk</p>

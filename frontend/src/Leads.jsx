@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Chart from 'chart.js/auto'
 import LeadPanel from './LeadPanel'
 import Tasks from './Tasks'
+import ReferralHeatmap from './ReferralHeatmap'
 import './Leads.css'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -116,7 +117,6 @@ export default function Dashboard() {
   const total = filteredRows.length
 
   const stageChartRef = useRef(null)
-  const reasonChartRef = useRef(null)
   const interestChartRef = useRef(null)
 
   const ownerTotal = ownerFilteredRows.length
@@ -134,7 +134,7 @@ export default function Dashboard() {
   ]
 
   const stageCounts = countBy(filteredRows.map((r) => r.stage))
-  const reasonCounts = countBy(filteredRows.map((r) => r.reason))
+  const referralDateCounts = countBy(filteredRows.map((r) => r.referralDate))
   const interestCounts = countBy(filteredRows.map((r) => r.interest))
 
   // Update a lead's stage from the table/panel dropdown via the same webhook the Talkdesk flow uses
@@ -164,11 +164,6 @@ export default function Dashboard() {
     data: { labels: Object.keys(stageCounts), datasets: [{ data: Object.values(stageCounts), backgroundColor: palette }] },
     options: { indexAxis: "y", plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { display: false } } } },
   }, [rows, selectedOwner, selectedView])
-  useChart(reasonChartRef, {
-    type: "bar",
-    data: { labels: Object.keys(reasonCounts), datasets: [{ data: Object.values(reasonCounts), backgroundColor: palette }] },
-    options: { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { display: false } } } },
-  }, [rows, selectedOwner, selectedView])
   useChart(interestChartRef, {
     type: "doughnut",
     data: { labels: Object.keys(interestCounts), datasets: [{ data: Object.values(interestCounts), backgroundColor: palette }] },
@@ -181,9 +176,7 @@ export default function Dashboard() {
         <div className="brand"><span className="dot"></span>Habitat Health</div>
         <div className="tabs">
           <span className="active">My Leads</span>
-          <span>Accounts</span>
-          <span>Reports</span>
-          <span>Dashboards</span>
+          <span><a href="/#dashboard">Dashboard</a></span>
         </div>
         <div className="right">
           <span>&#128269;</span>
@@ -213,7 +206,7 @@ export default function Dashboard() {
                     View:
                     <select value={selectedView} onChange={(e) => setSelectedView(e.target.value)}>
                       <option value="all">All Leads</option>
-                      <option value="in-progress">In Progress Leads</option>
+                      <option value="in-progress">Active Leads</option>
                       <option value="won">Won Leads</option>
                       <option value="lost">Lost Leads</option>
                     </select>
@@ -285,7 +278,7 @@ export default function Dashboard() {
               <div className="footer-note">1&ndash;{total} of {total} &middot; Sorted by Referral Date</div>
             </div><br></br>
 
-            <div>
+            <div id="dashboard">
               <h2>My Referrals</h2>
               <div className="kpi-row">
                 {kpis.map((k) => (
@@ -299,7 +292,7 @@ export default function Dashboard() {
 
               <div className="chart-row">
                 <div className="card"><h3>Pipeline by Stage</h3><canvas ref={stageChartRef}></canvas></div>
-                <div className="card"><h3>By Referral Reason</h3><canvas ref={reasonChartRef}></canvas></div>
+                <div className="card"><h3>Referrals by Date</h3><ReferralHeatmap counts={referralDateCounts} /></div>
                 <div className="card"><h3>Level of Interest</h3><canvas ref={interestChartRef}></canvas></div>
               </div>
             </div>
@@ -315,6 +308,7 @@ export default function Dashboard() {
         apiUrl={API_URL}
         onClose={() => setSelectedLead(null)}
         onUpdateStage={updateLeadStage}
+        onTaskStageChange={(l, newStage) => setRows((prev) => prev.map((r) => (r.id === l.id ? { ...r, stage: newStage } : r)))}
         updatingStageId={updatingStageId}
         stageUpdateError={stageUpdateError}
       />

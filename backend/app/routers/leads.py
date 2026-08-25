@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Call, Leads
 from app.schemas import CallResponse, LeadResponse
-from app.talkdesk_client import TalkdeskAPIError, TalkdeskAuthError, request_talkdesk_callback
 
 router = APIRouter()
 

@@ -5,6 +5,10 @@ from pydantic import BaseModel
 '''
 Pydantic schema models defining the contract for API requests and responses.
 '''
+
+'''
+Pydantic schema for leads.py -> get_leads
+'''
 class LeadResponse(BaseModel):
     salesforce_lead_id: str
     first_name: str | None = None
@@ -23,16 +27,8 @@ class LeadResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
-class LeadStatusUpdate(BaseModel):
-    """Payload sent by Talkdesk (e.g. a Studio flow) when a lead's status changes."""
-    opportunity_id: str
-    stage: str
-    enrollment_status: str | None = None
-
-
 '''
-Below are the Pydantic schemas for Talkdesk-related interactions, including request and response models.
+Pydantic schema for leads.py -> get_lead_calls
 '''
 class CallResponse(BaseModel):
     activity_id: str
@@ -43,5 +39,15 @@ class CallResponse(BaseModel):
     call_outcome: str | None = None
     comments: str | None = None
     location: str | None = None
+
+    model_config = {"from_attributes": True}
+
+'''
+Pydantic schema for webhooks.py -> talkdesk_lead_status_webhook
+'''
+class LeadStatusUpdate(BaseModel):
+    opportunity_id: str
+    stage: str
+    enrollment_status: str | None = None
 
     model_config = {"from_attributes": True}
