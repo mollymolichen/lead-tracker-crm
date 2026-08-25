@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Chart from 'chart.js/auto'
 import LeadPanel from './LeadPanel'
+import Tasks from './Tasks'
 import './Leads.css'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const palette = ["#1B96FF", "#2E844A", "#B95000", "#BA0517", "#7B3FE4", "#0B8880", "#8A6D00", "#5867E8"]
 const DEFAULT_OWNER = "Angelina Moua"
-const STAGE_ORDER = [
+export const STAGE_ORDER = [
   "Initial Engagement",
   "Home Visit - Non Clinical",
   "Center Tour",
@@ -16,14 +17,14 @@ const STAGE_ORDER = [
   "Closed Won",
   "Closed Lost",
 ]
-const IN_PROGRESS_STAGES = STAGE_ORDER.slice(0, 6)
+export const IN_PROGRESS_STAGES = STAGE_ORDER.slice(0, 6)
 const VIEW_STAGES = {
   "in-progress": IN_PROGRESS_STAGES,
   won: ["Closed Won"],
   lost: ["Closed Lost"],
 }
 
-function stageBadgeClass(stage) {
+export function stageBadgeClass(stage) {
   return "stage-" + stage.replace(/[^a-zA-Z]+/g, "-").replace(/^-|-$/g, "")
 }
 function interestClass(v) {
@@ -70,6 +71,10 @@ export default function Dashboard() {
   const [selectedOwner, setSelectedOwner] = useState(DEFAULT_OWNER)
   const [selectedView, setSelectedView] = useState("in-progress")
   const [selectedLead, setSelectedLead] = useState(null)
+
+  // Inline Stage dropdown editing (leads table and lead detail panel)
+  const [updatingStageId, setUpdatingStageId] = useState(null)
+  const [stageUpdateError, setStageUpdateError] = useState(null)
 
   // Fetch leads from the backend API and map them to the row format used by this view
   useEffect(() => {
@@ -132,6 +137,28 @@ export default function Dashboard() {
   const reasonCounts = countBy(filteredRows.map((r) => r.reason))
   const interestCounts = countBy(filteredRows.map((r) => r.interest))
 
+  // Update a lead's stage from the table/panel dropdown via the same webhook the Talkdesk flow uses
+  function updateLeadStage(lead, newStage) {
+    if (newStage === lead.stage) return
+    setUpdatingStageId(lead.id)
+    setStageUpdateError(null)
+    fetch(`${API_URL}/webhooks/talkdesk/lead-status`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ opportunity_id: lead.id, stage: newStage }),
+    })
+      .then(async (res) => {
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.detail || "Failed to update lead stage")
+        setRows((prev) => prev.map((r) => (r.id === lead.id ? { ...r, stage: newStage } : r)))
+      })
+      .catch((err) => setStageUpdateError(err.message))
+      .finally(() => setUpdatingStageId(null))
+  }
+
+  // Keep the slide-over panel showing the latest stage after an update, rather than a stale snapshot
+  const panelLead = selectedLead ? rows.find((r) => r.id === selectedLead.id) || selectedLead : null
+
   useChart(stageChartRef, {
     type: "bar",
     data: { labels: Object.keys(stageCounts), datasets: [{ data: Object.values(stageCounts), backgroundColor: palette }] },
@@ -153,7 +180,6 @@ export default function Dashboard() {
       <div className="topbar">
         <div className="brand"><span className="dot"></span>Habitat Health</div>
         <div className="tabs">
-          <span>My Tasks</span>
           <span className="active">My Leads</span>
           <span>Accounts</span>
           <span>Reports</span>
@@ -170,14 +196,16 @@ export default function Dashboard() {
 
       <div className="container">
         <h1 className="page-title">My Leads</h1>
-        <p className="subtitle">Live Salesforce/Talkdesk data &middot; Referral-to-enrollment pipeline across all Habitat Health locations</p>
+        <h2 className="subtitle">Welcome, {selectedOwner}! You can view the status of your leads across all Habitat Health locations.</h2>
 
         {loading && <p className="status-loading">Loading leads…</p>}
         {error && <p className="status-error">{error}</p>}
 
         {!loading && !error && (
           <>
-                      <div className="listview">
+            <Tasks rows={ownerFilteredRows} selectedOwner={selectedOwner} apiUrl={API_URL} setRows={setRows} onSelectLead={setSelectedLead} />
+
+            <div className="listview">
               <div className="listview-header">
                 <h3>My Leads</h3>
                 <div className="header-actions">
@@ -203,6 +231,7 @@ export default function Dashboard() {
                 </div>
               </div>
               <div style={{ overflowX: "auto" }}>
+                {stageUpdateError && <p className="status-error">{stageUpdateError}</p>}
                 <table>
                   <thead>
                     <tr>
@@ -227,7 +256,18 @@ export default function Dashboard() {
                             {r.first} {r.last}
                           </a>
                         </td>
-                        <td><span className={`badge ${stageBadgeClass(r.stage)}`}>{r.stage}</span></td>
+                        <td>
+                          <select
+                            className="stage-select"
+                            value={r.stage}
+                            disabled={updatingStageId === r.id}
+                            onChange={(e) => updateLeadStage(r, e.target.value)}
+                          >
+                            {STAGE_ORDER.map((stage) => (
+                              <option key={stage} value={stage}>{stage}</option>
+                            ))}
+                          </select>
+                        </td>
                         <td>{r.reason}</td>
                         <td>{r.org}</td>
                         <td>{r.contact}</td>
@@ -245,20 +285,23 @@ export default function Dashboard() {
               <div className="footer-note">1&ndash;{total} of {total} &middot; Sorted by Referral Date</div>
             </div><br></br>
 
-            <div className="kpi-row">
-              {kpis.map((k) => (
-                <div className="kpi-card" key={k.label}>
-                  <div className="label">{k.label}</div>
-                  <div className="value">{k.value}</div>
-                  <div className={`delta ${k.cls}`}>{k.delta}</div>
-                </div>
-              ))}
-            </div>
+            <div>
+              <h2>My Referrals</h2>
+              <div className="kpi-row">
+                {kpis.map((k) => (
+                  <div className="kpi-card" key={k.label}>
+                    <div className="label">{k.label}</div>
+                    <div className="value">{k.value}</div>
+                    <div className={`delta ${k.cls}`}>{k.delta}</div>
+                  </div>
+                ))}
+              </div>
 
-            <div className="chart-row">
-              <div className="card"><h3>Pipeline by Stage</h3><canvas ref={stageChartRef}></canvas></div>
-              <div className="card"><h3>By Referral Reason</h3><canvas ref={reasonChartRef}></canvas></div>
-              <div className="card"><h3>Level of Interest</h3><canvas ref={interestChartRef}></canvas></div>
+              <div className="chart-row">
+                <div className="card"><h3>Pipeline by Stage</h3><canvas ref={stageChartRef}></canvas></div>
+                <div className="card"><h3>By Referral Reason</h3><canvas ref={reasonChartRef}></canvas></div>
+                <div className="card"><h3>Level of Interest</h3><canvas ref={interestChartRef}></canvas></div>
+              </div>
             </div>
           </>
         )}
@@ -267,7 +310,14 @@ export default function Dashboard() {
         (seeded from Central_Dashboard_-_Opportunity_Export.xlsx); no real patient or referral information is shown.</p>
       </div>
 
-      <LeadPanel lead={selectedLead} apiUrl={API_URL} onClose={() => setSelectedLead(null)} />
+      <LeadPanel
+        lead={panelLead}
+        apiUrl={API_URL}
+        onClose={() => setSelectedLead(null)}
+        onUpdateStage={updateLeadStage}
+        updatingStageId={updatingStageId}
+        stageUpdateError={stageUpdateError}
+      />
     </>
   )
 }

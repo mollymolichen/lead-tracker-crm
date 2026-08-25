@@ -1,26 +1,20 @@
 import { useEffect, useState } from 'react'
+import { STAGE_ORDER } from './Leads'
 
 function sortByDateDesc(list) {
   return [...list].sort((a, b) => (a.call_date < b.call_date ? 1 : a.call_date > b.call_date ? -1 : 0))
 }
 
-export default function LeadPanel({ lead, apiUrl, onClose }) {
+export default function LeadPanel({ lead, apiUrl, onClose, onUpdateStage, updatingStageId, stageUpdateError }) {
   const [calls, setCalls] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [contactPhoneNumber, setContactPhoneNumber] = useState('')
-  const [calling, setCalling] = useState(false)
-  const [callStatus, setCallStatus] = useState(null)
-  const [callError, setCallError] = useState(null)
 
   useEffect(() => {
     if (!lead) return undefined
     let cancelled = false
     setLoading(true)
     setError(null)
-    setContactPhoneNumber('')
-    setCallStatus(null)
-    setCallError(null)
     fetch(`${apiUrl}/leads/${lead.id}/calls`)
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to load call history (${res.status})`)
@@ -34,30 +28,6 @@ export default function LeadPanel({ lead, apiUrl, onClose }) {
 
   if (!lead) return null
 
-  function handleTalkdeskCall() {
-    if (!contactPhoneNumber.trim()) {
-      setCallError('Enter a phone number to call.')
-      return
-    }
-
-    setCalling(true)
-    setCallStatus(null)
-    setCallError(null)
-    // Call create_lead_call from leads.py
-    fetch(`${apiUrl}/leads/${lead.id}/call`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contact_phone_number: contactPhoneNumber.trim() }),
-    })
-      .then(async (res) => {
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.detail || 'Talkdesk call request failed')
-        setCallStatus(data.message)
-      })
-      .catch((err) => setCallError(err.message))
-      .finally(() => setCalling(false))
-  }
-
   return (
     <>
       <div className="lead-panel-overlay" onClick={onClose}></div>
@@ -68,7 +38,23 @@ export default function LeadPanel({ lead, apiUrl, onClose }) {
         </div>
 
         <dl className="lead-details">
-          <div><dt>Stage</dt><dd>{lead.stage}</dd></div>
+          <div>
+            <dt>Stage</dt>
+            <dd>
+              <select
+                className="stage-select"
+                value={lead.stage}
+                disabled={updatingStageId === lead.id}
+                onChange={(e) => onUpdateStage(lead, e.target.value)}
+              >
+                {STAGE_ORDER.map((stage) => (
+                  <option key={stage} value={stage}>{stage}</option>
+                ))}
+              </select>
+            </dd>
+          </div>
+          {stageUpdateError && <p className="status-error">{stageUpdateError}</p>}
+
           <div><dt>Referral Reason</dt><dd>{lead.reason}</dd></div>
           <div><dt>Referring Organization</dt><dd>{lead.org}</dd></div>
           <div><dt>Referring Contact</dt><dd>{lead.contact}</dd></div>
@@ -79,19 +65,6 @@ export default function LeadPanel({ lead, apiUrl, onClose }) {
           {lead.coldClosedReason && <div><dt>Reason for Cold/Close</dt><dd>{lead.coldClosedReason}</dd></div>}
           <div><dt>Current Enrollment Status</dt><dd>{lead.enrollmentStatus}</dd></div>
         </dl>
-
-        <input
-          type="tel"
-          className="talkdesk-phone-input"
-          placeholder="Phone number to call, e.g. +15551234567"
-          value={contactPhoneNumber}
-          onChange={(e) => setContactPhoneNumber(e.target.value)}
-        />
-        <button type="button" className="talkdesk-call-btn" onClick={handleTalkdeskCall} disabled={calling}>
-          {calling ? "Calling…" : "Talkdesk: Call"}
-        </button>
-        {callStatus && <p className="status-success">{callStatus}</p>}
-        {callError && <p className="status-error">{callError}</p>}
 
         <h3 className="lead-panel-section-title">Call History</h3>
         <p className="call-history-source">Synced from Talkdesk</p>
