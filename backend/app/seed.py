@@ -35,6 +35,7 @@ def load_lead_rows() -> list[dict]:
             "level_of_interest": row["interest"],
             "enrollment_status": row["enrollmentStatus"],
             "assignee": row["accountOwner"],
+            "cold_closed_reason": row.get("coldClosedReason")
         })
     return leads
 

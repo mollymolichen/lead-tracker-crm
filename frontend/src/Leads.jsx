@@ -50,6 +50,7 @@ function toRow(lead) {
     interest: lead.level_of_interest,
     enrollmentStatus: lead.enrollment_status,
     accountOwner: lead.assignee,
+    coldClosedReason: lead.cold_closed_reason
   }
 }
 
@@ -70,6 +71,7 @@ export default function Dashboard() {
   const [selectedView, setSelectedView] = useState("in-progress")
   const [selectedLead, setSelectedLead] = useState(null)
 
+  // Fetch leads from the backend API and map them to the row format used by this view
   useEffect(() => {
     let cancelled = false
     setLoading(true)
@@ -175,23 +177,7 @@ export default function Dashboard() {
 
         {!loading && !error && (
           <>
-            <div className="kpi-row">
-              {kpis.map((k) => (
-                <div className="kpi-card" key={k.label}>
-                  <div className="label">{k.label}</div>
-                  <div className="value">{k.value}</div>
-                  <div className={`delta ${k.cls}`}>{k.delta}</div>
-                </div>
-              ))}
-            </div>
-
-            <div className="chart-row">
-              <div className="card"><h3>Pipeline by Stage</h3><canvas ref={stageChartRef}></canvas></div>
-              <div className="card"><h3>By Referral Reason</h3><canvas ref={reasonChartRef}></canvas></div>
-              <div className="card"><h3>Level of Interest</h3><canvas ref={interestChartRef}></canvas></div>
-            </div>
-
-            <div className="listview">
+                      <div className="listview">
               <div className="listview-header">
                 <h3>My Leads</h3>
                 <div className="header-actions">
@@ -229,7 +215,8 @@ export default function Dashboard() {
                       <th>Location</th>
                       <th>Referral Date</th>
                       <th>Level of Interest</th>
-                      <th>Current Enrollment Status</th>
+                      {selectedView !== "lost" && <th>Current Enrollment Status</th>}
+                      {selectedView !== "in-progress" && <th>Reason for Cold/Closed</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -248,13 +235,30 @@ export default function Dashboard() {
                         <td>{r.location}</td>
                         <td>{r.referralDate}</td>
                         <td><span className={interestClass(r.interest)}>{r.interest}</span></td>
-                        <td>{r.enrollmentStatus}</td>
+                        {selectedView !== "lost" && <td>{r.enrollmentStatus}</td>}
+                        {selectedView !== "in-progress" && <td>{r.coldClosedReason}</td>}
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
               <div className="footer-note">1&ndash;{total} of {total} &middot; Sorted by Referral Date</div>
+            </div><br></br>
+
+            <div className="kpi-row">
+              {kpis.map((k) => (
+                <div className="kpi-card" key={k.label}>
+                  <div className="label">{k.label}</div>
+                  <div className="value">{k.value}</div>
+                  <div className={`delta ${k.cls}`}>{k.delta}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="chart-row">
+              <div className="card"><h3>Pipeline by Stage</h3><canvas ref={stageChartRef}></canvas></div>
+              <div className="card"><h3>By Referral Reason</h3><canvas ref={reasonChartRef}></canvas></div>
+              <div className="card"><h3>Level of Interest</h3><canvas ref={interestChartRef}></canvas></div>
             </div>
           </>
         )}

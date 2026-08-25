@@ -31,6 +31,7 @@ class Leads(Base):
     level_of_interest = Column(String, nullable=True)
     enrollment_status = Column(String, nullable=True)
     assignee = Column(String, nullable=True)
+    cold_closed_reason = Column(String, nullable=True)
 
 
 class Call(Base):

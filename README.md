@@ -27,10 +27,11 @@ According to Talkdesk API docs, outbound calls can only be made as a step within
 The remaining columns in our mock data are updated by our internal ops team to track the progress of a lead.
 
 ### Alternatives Considered
-I considered building an autonomous AI agent that ES/OS leads could use alongside their regular Salesforce and Talkdesk workflows. For example, to start their day, the ES/OS could use natural language prompting to ask "which calls need to be made today" or "give me a status update on my in progress leads". The agent would then be able to make calls on behalf of the ES/OS for calls that are designated as AI-led. However, I decided against this approach due to the following:
+I considered building an AI call center agent that ES/OS leads could use alongside their regular Salesforce and Talkdesk workflows. For example, to start their day, the ES/OS could use natural language prompting to ask "which calls need to be made today" or "give me a status update on my in progress leads". The agent would then be able to make calls on behalf of the ES/OS for calls that are designated as AI-led. However, I decided against this approach due to the following:
 1. Not having access to a Salesforce or Talkdesk instance
 2. Not having a programmatic endpoint to make Talkdesk calls
 3. Avoiding adding a new surface area for ES/OS teams to manage
+https://calldesk.ai/blog/blueprint-to-build-ai-call-center
 
 ## Success Criteria
 - Primary metric: Volume of leads processed 

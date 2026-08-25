@@ -76,6 +76,7 @@ export default function LeadPanel({ lead, apiUrl, onClose }) {
           <div><dt>Location</dt><dd>{lead.location}</dd></div>
           <div><dt>Referral Date</dt><dd>{lead.referralDate}</dd></div>
           <div><dt>Level of Interest</dt><dd>{lead.interest}</dd></div>
+          {lead.coldClosedReason && <div><dt>Reason for Cold/Close</dt><dd>{lead.coldClosedReason}</dd></div>}
           <div><dt>Current Enrollment Status</dt><dd>{lead.enrollmentStatus}</dd></div>
         </dl>
 

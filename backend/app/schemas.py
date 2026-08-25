@@ -19,6 +19,7 @@ class LeadResponse(BaseModel):
     level_of_interest: str | None = None
     enrollment_status: str | None = None
     assignee: str | None = None
+    cold_closed_reason: str | None = None
 
     model_config = {"from_attributes": True}
 
