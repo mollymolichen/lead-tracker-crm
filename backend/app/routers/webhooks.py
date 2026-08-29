@@ -1,3 +1,5 @@
+"""Handle webhook events received from Talkdesk."""
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -7,12 +9,12 @@ from app.schemas import LeadResponse, LeadStatusUpdate
 
 router = APIRouter()
 
-# Webhook listener to receive updates from Talkdesk when a lead's status changes
 @router.post(
     "/webhooks/talkdesk/lead-status",
     response_model=LeadResponse
 )
 def handle_talkdesk_lead_status(body: LeadStatusUpdate, db: Session = Depends(get_db)):
+    """Apply a Talkdesk status update to an existing lead."""
     lead = db.get(Leads, body.opportunity_id)
     if lead is None:
         raise HTTPException(status_code=404, detail="Lead not found")

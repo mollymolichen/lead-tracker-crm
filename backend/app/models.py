@@ -1,21 +1,26 @@
+"""Define the SQLAlchemy ORM models used by the CRM."""
+
 from sqlalchemy import Column, String, Date
 
 from app.database import Base
 
-'''
-SQLAlchemy model defining the database table structure (ORM).
-'''
+class Call(Base):
+    """Represent a call activity associated with a sales opportunity."""
 
-class Staff(Base):
-    __tablename__ = "staff"
+    __tablename__ = "calls"
 
-    staff_id = Column(String, primary_key=True)
-    name = Column(String, nullable=True)
-    email = Column(String, nullable=True)
-    role = Column(String, nullable=True)
-
+    activity_id = Column(String, primary_key=True)
+    opportunity_id = Column(String, index=True, nullable=False)
+    subject = Column(String, nullable=True)
+    call_date = Column(Date, nullable=True)
+    call_success = Column(String, nullable=True)
+    call_outcome = Column(String, nullable=True)
+    comments = Column(String, nullable=True)
+    location = Column(String, nullable=True)
 
 class Leads(Base):
+    """Represent a lead tracked by the CRM."""
+
     __tablename__ = "leads"
 
     salesforce_lead_id = Column(String, primary_key=True)
@@ -33,15 +38,12 @@ class Leads(Base):
     assignee = Column(String, nullable=True)
     cold_closed_reason = Column(String, nullable=True)
 
+class Staff(Base):
+    """Represent a staff member who works with CRM leads."""
 
-class Call(Base):
-    __tablename__ = "calls"
+    __tablename__ = "staff"
 
-    activity_id = Column(String, primary_key=True)
-    opportunity_id = Column(String, index=True, nullable=False)
-    subject = Column(String, nullable=True)
-    call_date = Column(Date, nullable=True)
-    call_success = Column(String, nullable=True)
-    call_outcome = Column(String, nullable=True)
-    comments = Column(String, nullable=True)
-    location = Column(String, nullable=True)
+    staff_id = Column(String, primary_key=True)
+    name = Column(String, nullable=True)
+    email = Column(String, nullable=True)
+    role = Column(String, nullable=True)

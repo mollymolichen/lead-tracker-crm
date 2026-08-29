@@ -1,12 +1,8 @@
+"""Provide optional authentication and callback helpers for Talkdesk."""
+
 import requests
 
 from app.config import settings
-
-'''
-NOTE: This class is not used in the implementation. 
-It is a placeholder if we want to enable additional Talkdesk functionality and have an API key.
-Talkdesk client module for handling authentication and API requests.
-'''
 
 class TalkdeskAuthError(Exception):
     """Raised when Talkdesk OAuth token retrieval fails."""
@@ -14,11 +10,8 @@ class TalkdeskAuthError(Exception):
 class TalkdeskAPIError(Exception):
     """Raised when a Talkdesk API request fails."""
 
-'''
-Authenticate with Talkdesk using the OAuth 2.0 client credentials grant.
-    See: https://docs.talkdesk.com/docs/client-credentials
-'''
 def get_talkdesk_token() -> str:
+    """Authenticate with Talkdesk and return an OAuth access token."""
     payload = {
         "grant_type": "client_credentials",
         "client_id": settings.talkdesk_client_id,
@@ -40,11 +33,8 @@ def get_talkdesk_token() -> str:
     return token
 
 
-'''
-Request a Talkdesk callback that connects an agent to a contact's phone number.
-    See: https://docs.talkdesk.com/reference/calls-callback-post
-'''
 def request_talkdesk_callback(contact_phone_number: str) -> dict:
+    """Request a Talkdesk callback to the given contact phone number."""
     token = get_talkdesk_token()
     payload = {
         "talkdesk_phone_number": settings.talkdesk_phone_number,

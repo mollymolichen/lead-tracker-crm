@@ -173,7 +173,7 @@ export default function Dashboard() {
   return (
     <>
       <div className="topbar">
-        <div className="brand"><span className="dot"></span>Habitat Health</div>
+        <div className="brand"><span className="dot"></span>Senior Living CRM</div>
         <div className="tabs">
           <span className="active">My Leads</span>
           <span><a style={{ color: "inherit", textDecoration: "none" }} href="/#dashboard">Dashboard</a></span>
@@ -186,7 +186,7 @@ export default function Dashboard() {
 
       <div className="container">
         <h1 className="page-title">My Leads</h1>
-        <h2 className="subtitle">Welcome, {selectedOwner}! You can view the status of your leads across all Habitat Health locations.</h2>
+        <h2 className="subtitle">Welcome, {selectedOwner}! You can view the status of your leads across all senior living center locations.</h2>
 
         {loading && <p className="status-loading">Loading leads…</p>}
         {error && <p className="status-error">{error}</p>}

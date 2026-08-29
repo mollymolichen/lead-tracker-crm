@@ -1,10 +1,6 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+"""Load application settings from environment variables and .env files."""
 
-'''
-NOTE: This class is not used in the implementation. 
-It is a placeholder if we want to enable additional Talkdesk functionality and have an API key.
-Talkdesk client module for handling authentication and API requests.
-'''
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     """App configuration loaded from environment variables / .env file."""
@@ -21,14 +17,17 @@ class Settings(BaseSettings):
 
     @property
     def talkdesk_token_url(self) -> str:
+        """Return the Talkdesk OAuth token endpoint for the configured account."""
         return f"https://{self.talkdesk_account_subdomain}.talkdeskid.com/oauth/token"
 
     @property
     def talkdesk_api_base_url(self) -> str:
+        """Return the Talkdesk API base URL for the configured account."""
         return f"https://{self.talkdesk_account_subdomain}.talkdeskapp.com"
 
     @property
     def cors_origin_list(self) -> list[str]:
+        """Return the configured CORS origins as a normalized list."""
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
 

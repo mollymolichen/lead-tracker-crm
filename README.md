@@ -1,5 +1,5 @@
 ## Problem
-I decided to focus on centralizing phone call workflows for ES and OS teams to effectively close patient leads. Each time a phone call is made, the ops teams must manually reconcile two data sources:
+Operational teams running referrals for senior living centers are swamped due to high call volume, manual enrollment procedures, high variability between team members, and the lack of standardized information coming from multiple referral sources. To make the highest impact, I decided to focus on how to centralize phone call workflows for operational teams to effectively close patient leads. Each time a phone call is made, the ops teams must manually reconcile two data sources:
 1. Call-related information in Salesforce (# of call attempts, call outcome)
 2. Granular information from the Talkdesk call log (cross-referenced by Salesforce Opportunity ID)
 
@@ -10,7 +10,7 @@ This process is not only prone to human error but also inefficient for the ops t
 ### In Scope
 #### No single system of record to track a lead's statuses end-to-end
 - Instead of reconciling two data sources (Salesforce, Talkdesk) per phone call, we can pull Talkdesk call logs directly from our leads tracking app. Based on the implementation in `talkdesk_client.py`, when the lead's status changes in Talkdesk, it will automatically reflect back in the leads tracking app.
-- Each ES/OS has a task list of their in progress leads, when they were last contacted in Talkdesk, and how to progress them through the enrollment process.
+- Each enrollment team has a task list of their in progress leads, when they were last contacted in Talkdesk, and how to progress them through the enrollment process.
 - There is a dashboard of metrics tracking the total referral volume, in-progress leads, and conversion rate so each team member can track their individual progress.
 
 ### Out of Scope
@@ -21,7 +21,7 @@ This process is not only prone to human error but also inefficient for the ops t
 - If this were to change in the future, I've included a `talkdesk_client.py` and `config.py` with boilerplate on how to enable OAuth 2.0 to make calls to any Talkdesk APIs.
 
 #### Referral data being inconsistent across different sources
-80% of columns from our mock data (Opportunity_Export.csv) represent information that the Habitat Health Enrollment Specialist (ES) and Outreach Specialist (OS) teams are collecting operationally. I'm assuming the only columns we currently ask our referrals to provide are:
+80% of columns from our mock data (Opportunity_Export.csv) represent information that the enrollment ops teams are collecting operationally. I'm assuming the only columns we currently ask our referrals to provide are:
 1. Lead First Name
 2. Lead Last Name
 3. Lead DOB
@@ -30,45 +30,36 @@ This process is not only prone to human error but also inefficient for the ops t
 
 The remaining columns in our mock data are updated by our internal ops team to track the progress of a lead.  
 
-#### Keep Propio for live translation
-My assumption is that Propio is launched in a separate browser window when the ES/OS make the phone call in Talkdesk. We should continue to utilize this since many leads don't speak English as their primary language, or explore an integration with Talkdesk.
-
-#### Keep the existing Salesforce CRM
-I didn't want to transition off the Salesforce CRM platform because that implies we need to create a new CRM integration altogether. The initial user interface uses a mock Salesforce-like dashboard as the single interface for an ES/OS to manage leads. Knowing that Salesforce isn't the most flexible with task-tracking, I decided to narrow the scope to a custom workflow tracker on top of the mocked Salesforce CRM instance. 
-
-#### Keep Epic for patient data
-After the lead's LOC application is approved by the DHCS, they convert from a lead into a patient. The patient's medical forms should remain in Epic EHR. This keeps a clean distinction between the use of Salesforce for leads generation and Epic for patient tracking. We want to minimize the amount of sensitive healthcare information by only storing it for leads, and storing it in a HIPAA-compliant system that's meant to contain PHI.
-
 ### Alternatives Considered
-I considered building an AI call center agent that ES/OS leads could use alongside their regular Salesforce and Talkdesk workflows. For example, to start their day, the ES/OS could use natural language prompting to ask "which calls need to be made today" or "give me a status update on my in progress leads". The agent would then be able to make calls on behalf of the ES/OS for calls that are designated as AI-led. However, I decided against this [approach](https://calldesk.ai/blog/blueprint-to-build-ai-call-center) due to the following:
+I considered building an AI call center agent that enrollment team leads could use alongside their regular Salesforce and Talkdesk workflows. For example, to start their day, the enrollment team could use natural language prompting to ask "which calls need to be made today" or "give me a status update on my in progress leads". The agent would then be able to make calls on behalf of the enrollment team for calls that are designated as AI-led. However, I decided against this [approach](https://calldesk.ai/blog/blueprint-to-build-ai-call-center) due to the following:
 1. Not having access to a Salesforce or Talkdesk instance
 2. Not having a programmatic endpoint to make Talkdesk calls
-3. Avoiding adding a new surface area for ES/OS teams to manage  
+3. Avoiding adding a new surface area for enrollment team teams to manage  
 
 ## Success Criteria
 - **Primary metric:** Volume of leads processed 
 - **Secondary metric:** Lead conversion rate  
 
 ## Solution Design
-The prototype contains deterministic logic. To start their day, an ES or OS team member would open the leads tracking app, which is essentially a mock Salesforce instance seeded with the data provided. They see their in-progress leads by default, and can view the lead's call history from Talkdesk. When the lead's status changes in Talkdesk, we have a webhook listener set up to update which stage the lead is in so the two systems automatically stay in sync.  
+The prototype contains deterministic logic. To start their day, an ops team member would open the leads tracking app, which is essentially a mock Salesforce instance seeded with the data provided. They see their in-progress leads by default, and can view the lead's call history from Talkdesk. When the lead's status changes in Talkdesk, we have a webhook listener set up to update which stage the lead is in so the two systems automatically stay in sync.  
 
-- `Leads` data flow: `seed.py` -> `seed_data.json` -> PostgreSQL Leads table -> GET /leads/ -> Display leads in `Leads.jsx`
-- `Calls` data flow: `seed.py` -> `seed_data_calls.json` -> PostgreSQL Calls table -> GET /leads/{lead_id}/calls -> Display call history in `LeadPanel.jsx`
-- `Tasks` data flow: Saved in `Tasks.jsx` state, ephemeral  
+- **Leads data flow:** `seed_data.json` -> Seeding script (`seed.py`) -> PostgreSQL Leads table (`models.py`) -> GET /leads/ (`schemas.py`) -> Display leads (`Leads.jsx`)
+- **Calls data flow:** `seed_data_calls.json` -> Seeding script (`seed.py`) -> PostgreSQL Calls table (`models.py`) -> GET /leads/{lead_id}/calls (`schemas.py`) -> Display call history (`LeadPanel.jsx`)
+- **Tasks data flow:** Saved in `Tasks.jsx` state, ephemeral  
 
-`Leads` and `Calls` are seeded using their respective JSON script and fed into the PostgreSQL table. I've added a webhook listener to detect any changes from TalkDesk and update the lead's `stage`, but the actual TalkDesk integration isn't hooked up. Any .xlsx sheet with similar columns can be adapted and seeded into the database.
+`Leads` and `Calls` are seeded using their respective JSON script and fed into the PostgreSQL table. I've added a webhook listener to detect any changes from Talkdesk and update the lead's `stage`, but the actual Talkdesk integration isn't hooked up. Any .xlsx sheet with similar columns can be adapted and seeded into the database.
 
-I kept `Tasks` ephemeral because they represent what the ES/OS needs to do to progress the lead from one stage to another. The order of the stages is defined in `Leads.jsx` and when a task is completed, it moves the lead to the next intermediate stage. Once the lead reaches a terminal stage, they are either `Closed Won` or `Closed Lost` and there are no more tasks for the ES/OS to resolve. 
+I kept `Tasks` ephemeral because they represent what the enrollment team needs to do to progress the lead from one stage to another. The order of the stages is defined in `Leads.jsx` and when a task is completed, it moves the lead to the next intermediate stage. Once the lead reaches a terminal stage, they are either `Closed Won` or `Closed Lost` and there are no more tasks for the enrollment team to resolve. 
 
 A major assumption I made to keep scope tight is that agentic AI logic for phone calls would live in Talkdesk. According to their API docs, outbound calls can only be made as a step within a [Talkdesk Studio Workflow](https://studio.talkdesk.com/docs/make-outbound-call). I would recommend making the phone call workflow agentic to solve the pain point of agents running phone calls differently.  
 
-Some phone calls make sense to be initiated by humans and others make sense to be initiated by AI agents. If an in-progress lead misses a phone call, the agent will remember to try again in 24 hours (or after a waiting period). My proposal would be a personalized phone call from the ES/OS for the initial welcome call, and then to have a scripted AI phone call if the lead is unresponsive for 72 hours after the center tour or ES/OS visit.
+Some phone calls make sense to be initiated by humans and others make sense to be initiated by AI agents. If an in-progress lead misses a phone call, the agent will remember to try again in 24 hours (or after a waiting period). My proposal would be a personalized phone call from the enrollment team for the initial welcome call, and then to have a scripted AI phone call if the lead is unresponsive for 72 hours after the center tour or enrollment team visit.
 
-![Home Page](./leads.png)![Dashboard](./dashboard.png)
+![Home Page](./artifacts/leads.png)![Dashboard](./artifacts/dashboard.png)
 
 ### How the solution scales
 - Data: 
-    - Assuming we have Habitat Centers in the state of CA and ES/OS staff managing up to 10K leads at a time, we can keep the data layer relational even as we scale up to 10x more lead volume. 
+    - Assuming we have healthcare centers with enrollment team staff managing up to 10K leads at a time, we can keep the data layer relational even as we scale up to 10x more lead volume. 
     - We're using a Postgres database with tables (`leads`, `calls`, `staff`) defined in `models.py` running in a Docker container.
 
 - Frontend:

@@ -16,6 +16,7 @@ OPPORTUNITY_IDS = [f"006Ak3{i:05d}ZX" for i in range(42)]
 
 
 def load_lead_rows() -> list[dict]:
+    """Load and normalize lead records from the lead seed file."""
     with open(LEADS_SEED_FILE, encoding="utf-8") as f:
         rows = json.load(f)
 
@@ -41,6 +42,7 @@ def load_lead_rows() -> list[dict]:
 
 
 def load_call_rows() -> list[dict]:
+    """Load and normalize call records from the call seed file."""
     with open(CALLS_SEED_FILE, encoding="utf-8") as f:
         rows = json.load(f)
 
@@ -57,6 +59,7 @@ def load_call_rows() -> list[dict]:
 
 
 def upsert(db, table, rows, pk_column):
+    """Insert rows or update existing rows that share a primary key."""
     stmt = insert(table).values(rows)
     update_cols = {c.name: c for c in stmt.excluded if c.name != pk_column}
     stmt = stmt.on_conflict_do_update(index_elements=[pk_column], set_=update_cols)
@@ -64,6 +67,7 @@ def upsert(db, table, rows, pk_column):
 
 
 def seed():
+    """Create the database tables and seed the lead and call records."""
     Base.metadata.create_all(bind=engine)
     leads = load_lead_rows()
     calls = load_call_rows()
